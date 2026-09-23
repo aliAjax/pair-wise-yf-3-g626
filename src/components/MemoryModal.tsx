@@ -9,6 +9,8 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: MemoryInput) => void;
   editingData: SmellMemory | null;
+  /** 现用地点列表，用于输入提示，避免给同一处地方写出不同叫法 */
+  locationSuggestions: string[];
 }
 
 const defaultForm: MemoryInput = {
@@ -27,7 +29,7 @@ const defaultForm: MemoryInput = {
 const intensityTicks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const humidityTicks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-export default function MemoryModal({ isOpen, onClose, onSubmit, editingData }: Props) {
+export default function MemoryModal({ isOpen, onClose, onSubmit, editingData, locationSuggestions }: Props) {
   const [form, setForm] = useState<MemoryInput>(defaultForm);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -109,11 +111,17 @@ export default function MemoryModal({ isOpen, onClose, onSubmit, editingData }: 
                 <input
                   type="text"
                   required
+                  list="place-suggestions"
                   value={form.location}
                   onChange={(e) => update('location', e.target.value)}
                   placeholder="例如：外婆家的老衣柜"
                   className="scent-input"
                 />
+                <datalist id="place-suggestions">
+                  {locationSuggestions.map((loc) => (
+                    <option key={loc} value={loc} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <label className="block text-sm font-medium text-ink-700 mb-1.5">气味来源猜测</label>

@@ -1,7 +1,8 @@
 import type { SmellMemory } from '../utils/constants';
 import { getSeasonInfo, getSmellTypeInfo, getEmotionInfo } from '../utils/constants';
-import { formatDate, contrastTextColor } from '../utils/helpers';
-import { Pencil, Trash2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { formatDate, formatDay, contrastTextColor } from '../utils/helpers';
+import type { PlaceAlias } from '../utils/places';
+import { Pencil, Trash2, ChevronDown, ChevronUp, Heart, Tag } from 'lucide-react';
 
 interface Props {
   memory: SmellMemory;
@@ -10,9 +11,11 @@ interface Props {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  /** 该地点的曾用名（旧称呼 + 改名日期），仅在展开后展示 */
+  aliases?: PlaceAlias[];
 }
 
-export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit, onDelete }: Props) {
+export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit, onDelete, aliases = [] }: Props) {
   const season = getSeasonInfo(memory.season);
   const stype = getSmellTypeInfo(memory.smell_type);
   const emotion = getEmotionInfo(memory.emotion);
@@ -141,6 +144,23 @@ export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit
                   {memory.memory_text}
                 </p>
               </div>
+
+              {aliases.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-ink-700/40 shrink-0" />
+                  <span className="text-[11px] text-ink-700/50">曾用称呼：</span>
+                  {aliases.map((a) => (
+                    <span
+                      key={a.name}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-paper-200/80 text-ink-700/70 text-[11px] border border-paper-300"
+                    >
+                      {a.name}
+                      <span className="text-ink-700/40">{formatDay(a.renamed_at)} 改名</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-3 flex items-center justify-between pt-2 border-t border-paper-200/60">
                 <div className="flex items-center gap-1.5 text-[11px] text-ink-700/50">
                   <span>更新于 {formatDate(memory.updated_at)}</span>

@@ -14,10 +14,20 @@ export function formatDate(iso: string): string {
   return `${y}.${m}.${day} ${hh}:${mm}`;
 }
 
+export function formatDay(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
+}
+
 export interface Filters {
   smellType: string;
   season: string;
   emotion: string;
+  /** 现用地点筛选，只认现用称呼 */
+  location: string;
 }
 
 export function filterMemories(memories: SmellMemory[], filters: Filters): SmellMemory[] {
@@ -25,6 +35,7 @@ export function filterMemories(memories: SmellMemory[], filters: Filters): Smell
     if (filters.smellType && m.smell_type !== filters.smellType) return false;
     if (filters.season && m.season !== filters.season) return false;
     if (filters.emotion && m.emotion !== filters.emotion) return false;
+    if (filters.location && m.location !== filters.location) return false;
     return true;
   });
 }

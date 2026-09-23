@@ -4,9 +4,13 @@ import FilterPanel from '../components/FilterPanel';
 import VisualizationPanel from '../components/VisualizationPanel';
 import MemoryCard from '../components/MemoryCard';
 import MemoryModal from '../components/MemoryModal';
+import PlaceDirectoryModal from '../components/PlaceDirectoryModal';
 import { useMemoryStore } from '../store/memoryStore';
+import { usePlaceStore } from '../store/placeStore';
 import type { Filters } from '../utils/helpers';
 import { filterMemories } from '../utils/helpers';
+import { buildDirectory } from '../utils/places';
+import type { PlaceAlias } from '../utils/places';
 import type { SmellMemory } from '../utils/constants';
 import type { MemoryInput } from '../store/memoryStore';
 import { BookOpenCheck } from 'lucide-react';
@@ -15,18 +19,36 @@ const defaultFilters: Filters = {
   smellType: '',
   season: '',
   emotion: '',
+  location: '',
 };
 
 export default function Home() {
   const { memories, initIfEmpty, addMemory, updateMemory, deleteMemory } = useMemoryStore();
+  const places = usePlaceStore((s) => s.places);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
   const [editing, setEditing] = useState<SmellMemory | null>(null);
 
   useEffect(() => {
     initIfEmpty();
   }, [initIfEmpty]);
+
+  // 地点目录：显式记录 + 记忆中实际出现的地点，统一以现用名对外
+  const directory = useMemo(() => buildDirectory(memories, places), [memories, places]);
+
+  // 现用地点（筛选、输入提示只认现用名）
+  const currentLocations = useMemo(() => directory.map((e) => e.name), [directory]);
+
+  // 现用名 → 曾用名列表，卡片展开后用来展示旧称呼和改名日期
+  const aliasMap = useMemo(() => {
+    const map = new Map<string, PlaceAlias[]>();
+    for (const entry of directory) {
+      if (entry.aliases.length > 0) map.set(entry.name, entry.aliases);
+    }
+    return map;
+  }, [directory]);
 
   const filteredMemories = useMemo(
     () => filterMemories(memories, filters),
@@ -37,6 +59,11 @@ export default function Home() {
     setFilters((f) => ({ ...f, [key]: value }));
   };
   const resetFilters = () => setFilters(defaultFilters);
+
+  const handleRenamed = (oldName: string, newName: string) => {
+    // 若正按旧称呼筛选，跟着切到新称呼，筛选数不断档；其余筛选与卡片顺序不动
+    setFilters((f) => (f.location === oldName ? { ...f, location: newName } : f));
+  };
 
   const openAddModal = () => { setEditing(null); setModalOpen(true); };
   const openEditModal = (m: SmellMemory) => { setEditing(m); setModalOpen(true); };
@@ -68,7 +95,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <Header onAdd={openAddModal} memoryCount={memories.length} />
+      <Header onAdd={openAddModal} onOpenDirectory={() => setDirectoryOpen(true)} memoryCount={memories.length} />
 
       <main className="container max-w-6xl pb-20">
         <FilterPanel
@@ -76,6 +103,7 @@ export default function Home() {
           onChange={handleFilterChange}
           onReset={resetFilters}
           resultCount={filteredMemories.length}
+          locations={currentLocations}
         />
 
         <VisualizationPanel memories={filteredMemories} onSelect={scrollToCard} />
@@ -95,12 +123,12 @@ export default function Home() {
             <div className="bg-paper-50/70 backdrop-blur rounded-3xl border-2 border-dashed border-paper-400 py-20 text-center">
               <div className="text-6xl mb-4 select-none">🍂</div>
               <h3 className="font-serif text-2xl text-ink-800 mb-2">
-                {(filters.smellType || filters.season || filters.emotion)
+                {(filters.smellType || filters.season || filters.emotion || filters.location)
                   ? '没有匹配的气味记忆'
                   : '还没有封存任何气味'}
               </h3>
               <p className="text-ink-700/60 max-w-md mx-auto mb-6">
-                {(filters.smellType || filters.season || filters.emotion)
+                {(filters.smellType || filters.season || filters.emotion || filters.location)
                   ? '换一组筛选条件试试？或者先封存一段新的气味'
                   : '空气中一定有让你难忘的味道——无论是衣柜里的樟木香，还是雨后操场的青草气'}
               </p>
@@ -108,7 +136,7 @@ export default function Home() {
                 <button onClick={openAddModal} className="btn-primary">
                   封存第一段气味
                 </button>
-                {(filters.smellType || filters.season || filters.emotion) && (
+                {(filters.smellType || filters.season || filters.emotion || filters.location) && (
                   <button onClick={resetFilters} className="btn-secondary">
                     清除筛选条件
                   </button>
@@ -126,6 +154,7 @@ export default function Home() {
                     onToggle={() => setExpandedId(expandedId === m.id ? null : m.id)}
                     onEdit={() => openEditModal(m)}
                     onDelete={() => handleDelete(m.id)}
+                    aliases={aliasMap.get(m.location) ?? []}
                   />
                 </div>
               ))}
@@ -143,6 +172,14 @@ export default function Home() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         editingData={editing}
+        locationSuggestions={currentLocations}
+      />
+
+      <PlaceDirectoryModal
+        isOpen={directoryOpen}
+        onClose={() => setDirectoryOpen(false)}
+        memories={memories}
+        onRenamed={handleRenamed}
       />
     </div>
   );
