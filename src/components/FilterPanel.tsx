@@ -7,6 +7,7 @@ interface Props {
   onChange: (key: keyof Filters, value: string) => void;
   onReset: () => void;
   resultCount: number;
+  locations: string[];
 }
 
 function makeSelectClass(active: boolean) {
@@ -17,8 +18,16 @@ function makeSelectClass(active: boolean) {
   }`;
 }
 
-export default function FilterPanel({ filters, onChange, onReset, resultCount }: Props) {
-  const hasFilter = filters.smellType || filters.season || filters.emotion;
+function chevron(active: boolean) {
+  return {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${active ? 'FBF7EE' : '8B5A2B'}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundPosition: 'right 12px center',
+  };
+}
+
+export default function FilterPanel({ filters, onChange, onReset, resultCount, locations }: Props) {
+  const hasFilter = filters.smellType || filters.season || filters.emotion || filters.location;
 
   return (
     <section className="container max-w-6xl mb-6">
@@ -35,11 +44,7 @@ export default function FilterPanel({ filters, onChange, onReset, resultCount }:
                 value={filters.smellType}
                 onChange={(e) => onChange('smellType', e.target.value)}
                 className={`${makeSelectClass(!!filters.smellType)} w-full sm:w-auto`}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${filters.smellType ? 'FBF7EE' : '8B5A2B'}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
+                style={chevron(!!filters.smellType)}
               >
                 <option value="">全部气味类型</option>
                 {SMELL_TYPES.map((t) => (
@@ -55,11 +60,7 @@ export default function FilterPanel({ filters, onChange, onReset, resultCount }:
                 value={filters.season}
                 onChange={(e) => onChange('season', e.target.value)}
                 className={`${makeSelectClass(!!filters.season)} w-full sm:w-auto`}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${filters.season ? 'FBF7EE' : '8B5A2B'}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
+                style={chevron(!!filters.season)}
               >
                 <option value="">全部季节</option>
                 {SEASONS.map((s) => (
@@ -75,16 +76,28 @@ export default function FilterPanel({ filters, onChange, onReset, resultCount }:
                 value={filters.emotion}
                 onChange={(e) => onChange('emotion', e.target.value)}
                 className={`${makeSelectClass(!!filters.emotion)} w-full sm:w-auto`}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23${filters.emotion ? 'FBF7EE' : '8B5A2B'}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
+                style={chevron(!!filters.emotion)}
               >
                 <option value="">全部情绪</option>
                 {EMOTIONS.map((e) => (
                   <option key={e.value} value={e.value} className="bg-paper-50 text-ink-800">
                     {e.emoji} {e.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative min-w-[10rem]">
+              <select
+                value={filters.location}
+                onChange={(e) => onChange('location', e.target.value)}
+                className={`${makeSelectClass(!!filters.location)} w-full sm:w-auto max-w-[12.5rem]`}
+                style={chevron(!!filters.location)}
+              >
+                <option value="">全部地点</option>
+                {locations.map((name) => (
+                  <option key={name} value={name} className="bg-paper-50 text-ink-800">
+                    📍 {name}
                   </option>
                 ))}
               </select>

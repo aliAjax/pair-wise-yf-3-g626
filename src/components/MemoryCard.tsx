@@ -1,18 +1,20 @@
 import type { SmellMemory } from '../utils/constants';
 import { getSeasonInfo, getSmellTypeInfo, getEmotionInfo } from '../utils/constants';
 import { formatDate, contrastTextColor } from '../utils/helpers';
-import { Pencil, Trash2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import type { FormerName } from '../utils/locations';
+import { Pencil, Trash2, ChevronDown, ChevronUp, Heart, History } from 'lucide-react';
 
 interface Props {
   memory: SmellMemory;
   index: number;
   isExpanded: boolean;
+  formerNames: FormerName[];
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit, onDelete }: Props) {
+export default function MemoryCard({ memory, index, isExpanded, formerNames, onToggle, onEdit, onDelete }: Props) {
   const season = getSeasonInfo(memory.season);
   const stype = getSmellTypeInfo(memory.smell_type);
   const emotion = getEmotionInfo(memory.emotion);
@@ -133,6 +135,28 @@ export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit
 
           {isExpanded && (
             <div className="px-4 pb-4 animate-expand overflow-hidden">
+              {formerNames.length > 0 && (
+                <div className="mb-3 p-3 rounded-xl bg-lavender-300/15 border border-lavender-300/40">
+                  <div className="flex items-center gap-1.5 text-[11px] text-lavender-600 mb-1.5">
+                    <History className="w-3.5 h-3.5" />
+                    这个地方的旧称呼
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[...formerNames].reverse().map((f) => (
+                      <span
+                        key={f.name}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-50/80 text-ink-700/75 text-xs border border-paper-300"
+                        title={`改名于 ${formatDate(f.renamedAt)}`}
+                      >
+                        <span className="line-through decoration-ink-700/40">{f.name}</span>
+                        <span className="text-[10px] text-ink-700/45">
+                          {formatDate(f.renamedAt)}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="p-4 rounded-xl bg-paper-100/70 border border-paper-200/80">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-hand text-lg text-ochre-600">关联记忆</span>

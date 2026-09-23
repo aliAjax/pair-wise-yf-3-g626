@@ -18,6 +18,7 @@ export interface Filters {
   smellType: string;
   season: string;
   emotion: string;
+  location: string;
 }
 
 export function filterMemories(memories: SmellMemory[], filters: Filters): SmellMemory[] {
@@ -25,6 +26,8 @@ export function filterMemories(memories: SmellMemory[], filters: Filters): Smell
     if (filters.smellType && m.smell_type !== filters.smellType) return false;
     if (filters.season && m.season !== filters.season) return false;
     if (filters.emotion && m.emotion !== filters.emotion) return false;
+    // 地点只认现用名（传入的记忆应已做过现用名解析）
+    if (filters.location && m.location !== filters.location) return false;
     return true;
   });
 }
